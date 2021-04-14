@@ -1,0 +1,23 @@
+These files allow to simulate strategies for the game can't stop by Sid Jackson.
+
+
+CantStop.jl is a Module containing all the simulation tools. You should not need to modify it,
+but are welcome to look into it. Let me know if there is a bug.
+The main object in it is the game_state which represent all the informations available on the
+game at any given time.
+
+plot_position.jl is a helper file that allow you to visualize a game state.
+
+Policies_42.jl is the file from which you should make your own Policies_xx.jl, where xx is 
+your group number (found at https://docs.google.com/spreadsheets/d/1k5a12aV4dwu36N7IRTr-jWsP9aYbbRaNNVsEQ3YoVJA/edit#gid=0). You have two functions (with the same name) per question. 
+For each question, the first function take as argument a game_state object and a set of
+admissible moves (given by the simulator), and should return the index of the move chosen.
+The second function takes only a game_state and return a boolean stating if you stop or continue throwing.
+
+Policies_666.jl is a copy of Policies_42.jl, that you can use to test a game with two players.
+
+simulator.jl is the file you should run to test your policy. It contains example of what you can do.
+
+If you have questions the Teams channel "Project" is there for you !
+
+
