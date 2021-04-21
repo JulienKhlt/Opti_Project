@@ -1,6 +1,7 @@
 include("CantStop.jl")
 module Policies_42 #Replace 42 by your groupe number
 using ..CantStop # to access function exported from CantStop
+using Distributions
 
 """
 You have to define a policy for each question
@@ -85,6 +86,40 @@ end
 
 println(find_best(7, 3/4))
 
+function throw(nb, p)
+    d = Binomial(1, p)
+    for _ in 1:nb
+        if rand(d, 1)[1] == 0
+            return false
+        end
+    end
+    return true
+end
+
+function test(G, p)
+    policy = find_best(G, p)[2]
+    Throw = policy[length(policy)]
+    turn = 0
+    for t in 1:length(Throw)
+        turn += 1
+        while throw(Throw[t], p) != true
+            turn += 1
+        end
+    end
+    return turn
+end
+
+function Esp_test(G, p, nb)
+    mean = 0
+    for i in 1:nb
+        mean += test(G, p)
+    end
+    return mean / nb
+end
+
+println(test(7, 3/4))
+println(Esp_test(7, 3/4, 1000))
+
 #Question 3
 function policy_q3(gs::game_state, adm_movement)
     return 1
@@ -137,6 +172,7 @@ function equal(a, b, i, j, k)
     
 end
 
+
 println(proba(6, 7, 8))
 println(proba2(6, 7, 8))
 
@@ -149,9 +185,124 @@ function policy_q4(gs::game_state)
     return (sum(gs.tentitative_movement) > 2)
 end
 
-function find_best_game(i, j, k, ki, kj, kk)
-        
+function throw_multiple()
+    return rand(1:6), rand(1:6), rand(1:6), rand(1:6) 
 end
+
+function get_possibilities(a, b, c, d)
+    return [[a+b, c+d], [a+c, b+d], [a+d, b+c]]
+end
+
+function count(l, i, j, k)
+    sum([l[n] == i for n in 1:length(l)]), sum([l[n] == j for n in 1:length(l)]), sum([l[n] == k for n in 1:length(l)])
+end
+
+function finish(V, i, j, k, ki, kj, kk)
+    turn = 0
+    ni = ki
+    nj = kj
+    nk = kk
+    while ni != 1 || nj != 1 || nk != 1
+        a, b, c, d = throw_multiple()
+        l = get_possibilities(a, b, c, d)
+        best = 10000
+        ind = -1
+        for n in 1:length(l)
+            gi, gj, gk = count(l[n], i, j, k)
+            if ni < gi + 1
+                gi = ni - 1
+            end
+            if nj < gj + 1
+                gj = nj - 1
+            end
+            if nk < gk + 1
+                gk = nk - 1
+            end
+            if best > V[ni - gi, nj - gj, nk - gk] && (gi != 0 || gj != 0 || gk != 0)
+                ind = n
+                best = V[ni - gi, nj - gj, nk - gk]
+            end
+        end
+        if ind == -1
+            turn += 1
+        else 
+            gi, gj, gk = count(l[ind], i, j, k)
+            if ni < gi + 1
+                gi = ni - 1
+            end
+            if nj < gj + 1
+                gj = nj - 1
+            end
+            if nk < gk + 1
+                gk = nk - 1
+            end
+            ni -= gi
+            nj -= gj
+            nk -= gk
+        end
+    end
+    return turn    
+end
+
+function mean(V, i, j, k, ki, kj, kk, nb)
+    turn = 0
+    for _ in 1:nb
+        turn += finish(V, i, j, k, ki, kj, kk)
+        
+    end
+    return turn / nb
+end
+
+function find_direct_game(i, j, k, ki, kj, kk, nb)
+    V = zeros(ki, kj, kk)
+    for n in 1:ki
+        for m in 1:kj
+            for o in 1:kk
+                V[n, m, o] = mean(V, i, j, k, n, m, o, nb)
+            end
+        end
+    end
+    return V
+end
+
+function find_best_game(i, j, k, ki, kj, kk, nb)
+    V = find_direct_game(i, j, k, ki, kj, kk, nb)
+    S = zeros(CartesianIndex{3}, ki, kj, kk)
+    for n in 1:ki
+        for m in 1:kj
+            for o in 1:kk
+                B = [V[a, b, c] + V[n+1-a, m+1-b, o+1-c] for a in 1:n, b in 1:m, c in 1:o]
+                V[n, m, o] = minimum(B)
+                S[n, m, o] = findall(isequal(V[n, m, o]), B)[1]
+            end
+        end
+    end
+    return V, S
+end
+
+function get_strat(S, ki, kj, kk, i, j, k)
+    si, sj, sk = i, j, k
+    strat = []
+    while si != 1 || sj != 1 || sk != 1
+        s = S[si, sj, sk]
+        ni, nj, nk = s[1]-1, s[2]-1, s[3]-1
+        if ni == 0 && nj == 0 && nk == 0
+            push!(strat, [si, sj, sk])
+            si = 1
+            sj = 1
+            sk = 1
+        else
+            push!(strat, [ni, nj, nk])
+        end
+    end
+    return strat  
+end
+
+println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
+V, S = find_best_game(2, 2, 2, 4, 3, 3, 1000)
+println(V[:, 1, 1])
+println(S[:, 1, 1])
+
 
 #Question 5
 function policy_q5(gs::game_state, adm_movement)
