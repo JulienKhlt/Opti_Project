@@ -84,7 +84,7 @@ function find_best(G, p)
     return turn, policy
 end
 
-println(find_best(7, 3/4))
+#println(find_best(7, 3/4))
 
 function throw(nb, p)
     d = Binomial(1, p)
@@ -117,8 +117,8 @@ function Esp_test(G, p, nb)
     return mean / nb
 end
 
-println(test(7, 3/4))
-println(Esp_test(7, 3/4, 1000))
+# println(test(7, 3/4))
+# println(Esp_test(7, 3/4, 1000))
 
 #Question 3
 function policy_q3(gs::game_state, adm_movement)
@@ -169,12 +169,11 @@ end
 
 function equal(a, b, i, j, k)
     return (a+b == i || a+b == j || a+b == k)
-    
 end
 
 
-println(proba(6, 7, 8))
-println(proba2(6, 7, 8))
+# println(proba(6, 7, 8))
+# println(proba2(6, 7, 8))
 
 
 #Question 4
@@ -298,10 +297,144 @@ function get_strat(S, ki, kj, kk, i, j, k)
     return strat  
 end
 
-println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
-V, S = find_best_game(2, 2, 2, 4, 3, 3, 1000)
-println(V[:, 1, 1])
-println(S[:, 1, 1])
+# println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
+# V, S = find_best_game(2, 2, 2, 4, 3, 3, 1000)
+# println(V[:, 1, 1])
+# println(S[:, 1, 1])
+
+
+
+#Question 4 V2
+
+
+function q4_dynamic(i,j,k,ri0,rj0,rk0,T)
+    Vtplus1 = fill(0.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+    
+    #(di,dj,dk,ri,rj,rk)
+    # (avancée à ce tour sur i,j et k, cases restantes sur i,j et k)
+    # index 1 correspond à ri = 0
+
+    #Vtplus1[:,:,:,:,:,:] .= 0 # Initialisation "à l'infini"
+    Vt = fill(10000.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+
+    intermed = fill(10000.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+
+    for t in T-1:-1:1
+        print(t," ")
+        compute_Vt(Vt,Vtplus1,t,i,j,k,ri0,rj0,rk0)
+        intermed = Vtplus1
+        Vtplus1 = Vt # On ne stocke pas tout pour pas trop saturer la ram et on utilise intermed pour eviter les copies.
+        Vt = intermed
+    end
+
+    res = Vt[1,1,1,ri0+1,rj0+1,rk0+1]
+
+    Vt=nothing
+    Vtplus1=nothing
+    return res
+end
+
+function compute_Vt(Vt,Vtp1,t,i,j,k,ri0,rj0,rk0)
+    for ri in 0:ri0
+        for rj in 0:rj0
+            for rk in 0:rk0
+                for di in 0:ri
+                    for dj in 0:rj
+                        for dk in 0:rk
+                            compute_min_actions(Vt,Vtp1,t,i,j,k,di,dj,dk,ri,rj,rk)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function get_possibilities_and_legality(a, b, c, d, i, j, k)
+    combis = [[a+b,c+d],[a+c,b+d],[a+d,b+c]]
+    for x in 1:3
+        for y in 1:2
+            val = combis[x][y]
+            if val==i || val==j || val==k
+                return combis, true
+            end
+        end
+    end
+    return combis, false
+end
+
+function compute_min_actions(Vt,Vtp1,t,i,j,k,di,dj,dk,ri,rj,rk)
+
+    if ri==0 && rj==0 && rk==0
+        Vt[di+1,dj+1,dk+1,ri+1,rj+1,rk+1] = 0
+        return
+    end
+
+    if_i_stop = 1+Vtp1[1,1,1,ri-di+1,rj-dj+1,rk-dk+1]
+
+    nb_fail = 0
+    if_i_throw_success_sum = 0
+    
+    nb_throws_tot = 6^4
+    
+    for throw in 0:nb_throws_tot-1
+        (a,b,c,d) = digits(throw,base=6,pad=4).+1
+        combis, legal = get_possibilities_and_legality(a, b, c, d, i, j, k)
+        if legal
+            mini_val_combi = 10000
+            for (s1,s2) in combis
+                di_new,dj_new,dk_new = di,dj,dk
+                has_changed = false
+                
+                if s1==i && ri>di_new
+                    di_new+=1
+                    has_changed = true
+                elseif s1==j && rj>dj_new
+                    dj_new+=1
+                    has_changed = true
+                elseif s1==k && rk>dk_new
+                    dk_new+=1
+                    has_changed = true
+                end
+                
+                if s2==i && ri>di_new
+                    di_new+=1
+                    has_changed = true
+                elseif s2==j && rj>dj_new
+                    dj_new+=1
+                    has_changed = true
+                elseif s2==k && rk>dk_new
+                    dk_new+=1
+                    has_changed = true
+                end
+                
+                if has_changed
+                    val_combi = Vtp1[di_new+1,dj_new+1,dk_new+1,ri+1,rj+1,rk+1]
+                    if val_combi<mini_val_combi
+                        mini_val_combi=val_combi
+                    end
+                end
+            end
+            if mini_val_combi<10000
+                if_i_throw_success_sum+=mini_val_combi
+            else
+                nb_fail+=1
+            end
+        else
+            nb_fail+=1
+        end
+    end
+        
+    if_i_throw_fail_sum = nb_fail*(1+Vtp1[1,1,1,ri+1,rj+1,rk+1])
+    if_i_throw = (if_i_throw_fail_sum+if_i_throw_success_sum)/(nb_throws_tot)
+
+    #println(if_i_stop," ",if_i_throw)
+    mini = min(if_i_stop,if_i_throw)
+
+    Vt[di+1,dj+1,dk+1,ri+1,rj+1,rk+1] = mini
+end
+
+@time println(q4_dynamic(6,7,8,3,3,3,100))
 
 
 #Question 5
