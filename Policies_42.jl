@@ -1,5 +1,5 @@
 include("CantStop.jl")
-module Policies_42 #Replace 42 by your groupe number
+module Policies_42 # Replace 42 by your groupe number
 using ..CantStop # to access function exported from CantStop
 using Distributions
 
@@ -44,22 +44,22 @@ movement in column 2 and 5.
 Finally you can access the length of column j by column_length[j].
 """
 function policy_q1(gs::game_state, adm_movement)
-    return 1 #choose the first admissible movement offered
+    return 1 # choose the first admissible movement offered
 end
 function policy_q1(gs::game_state)
     return (sum(gs.tentitative_movement) > 2)
 end
 
 function best_policy(p)
-    k = 1/log(1/p)
+    k = 1 / log(1 / p)
     part_ent = floor(k)
-    if part_ent > p/(1-p)
+    if part_ent > p / (1 - p)
         return part_ent
     else
         return part_ent + 1
     end
 end
-#Question 2
+# Question 2
 function policy_q2(gs::game_state, adm_movement)
     return 1
 end
@@ -68,23 +68,23 @@ function policy_q2(gs::game_state)
 end
 
 function find_best(G, p)
-    turn = [1/p]
+    turn = [1 / p]
     policy = [[1]]
     for k in 2:G
-        best = min(minimum([turn[i] + turn[k-i] for i in 1:length(turn)]), 1/(p^k))
-        if best == 1/(p^k)
+        best = min(minimum([turn[i] + turn[k - i] for i in 1:length(turn)]), 1 / (p^k))
+        if best == 1 / (p^k)
             push!(policy, [k])
         else
             
-            poli = argmin([turn[i] + turn[k-i] for i in 1:length(turn)])
-            push!(policy, vcat(policy[poli], policy[k-poli]))
+            poli = argmin([turn[i] + turn[k - i] for i in 1:length(turn)])
+            push!(policy, vcat(policy[poli], policy[k - poli]))
         end
         push!(turn, best)
     end
     return turn, policy
 end
 
-#println(find_best(7, 3/4))
+# println(find_best(7, 3/4))
 
 function throw(nb, p)
     d = Binomial(1, p)
@@ -120,7 +120,7 @@ end
 # println(test(7, 3/4))
 # println(Esp_test(7, 3/4, 1000))
 
-#Question 3
+# Question 3
 function policy_q3(gs::game_state, adm_movement)
     return 1
 end
@@ -135,11 +135,11 @@ function proba(i, j, k)
         for b in 1:6
             for c in 1:6
                 for d in 1:6
-                    if ((a+b == i) || (a+b == j) || (a+b == k) || (a+c == i)
-                        || (a+c == j) || (a+c == k) || (a+d == i) || (a+d == j)
-                        || (a+d == k) || (b+c == i) || (c+b == j) || (c+b == k)
-                        || (c+d == i) || (c+d == j) || (d+c == k)
-                        || (b+d == i) || (b+d == j) || (d+b == k))
+                    if ((a + b == i) || (a + b == j) || (a + b == k) || (a + c == i)
+                        || (a + c == j) || (a + c == k) || (a + d == i) || (a + d == j)
+                        || (a + d == k) || (b + c == i) || (c + b == j) || (c + b == k)
+                        || (c + d == i) || (c + d == j) || (d + c == k)
+                        || (b + d == i) || (b + d == j) || (d + b == k))
                         p += 1
                     end
                 end
@@ -168,7 +168,7 @@ function proba2(i, j, k)
 end
 
 function equal(a, b, i, j, k)
-    return (a+b == i || a+b == j || a+b == k)
+    return (a + b == i || a + b == j || a + b == k)
 end
 
 
@@ -176,7 +176,7 @@ end
 # println(proba2(6, 7, 8))
 
 
-#Question 4
+# Question 4
 function policy_q4(gs::game_state, adm_movement)
     return 1
 end
@@ -189,7 +189,7 @@ function throw_multiple()
 end
 
 function get_possibilities(a, b, c, d)
-    return [[a+b, c+d], [a+c, b+d], [a+d, b+c]]
+    return [[a + b, c + d], [a + c, b + d], [a + d, b + c]]
 end
 
 function count(l, i, j, k)
@@ -270,7 +270,7 @@ function find_best_game(i, j, k, ki, kj, kk, nb)
     for n in 1:ki
         for m in 1:kj
             for o in 1:kk
-                B = [V[a, b, c] + V[n+1-a, m+1-b, o+1-c] for a in 1:n, b in 1:m, c in 1:o]
+                B = [V[a, b, c] + V[n + 1 - a, m + 1 - b, o + 1 - c] for a in 1:n, b in 1:m, c in 1:o]
                 V[n, m, o] = minimum(B)
                 S[n, m, o] = findall(isequal(V[n, m, o]), B)[1]
             end
@@ -279,69 +279,51 @@ function find_best_game(i, j, k, ki, kj, kk, nb)
     return V, S
 end
 
-function get_strat(S, ki, kj, kk, i, j, k)
-    si, sj, sk = i, j, k
-    strat = []
-    while si != 1 || sj != 1 || sk != 1
-        s = S[si, sj, sk]
-        ni, nj, nk = s[1]-1, s[2]-1, s[3]-1
-        if ni == 0 && nj == 0 && nk == 0
-            push!(strat, [si, sj, sk])
-            si = 1
-            sj = 1
-            sk = 1
-        else
-            push!(strat, [ni, nj, nk])
-        end
-    end
-    return strat  
-end
-
-# println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
-# V, S = find_best_game(2, 2, 2, 4, 3, 3, 1000)
-# println(V[:, 1, 1])
-# println(S[:, 1, 1])
+println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
+V, S = find_best_game(2, 7, 12, 2, 6, 2, 1000)
+println(V[2, 6, 2])
 
 
 
-#Question 4 V2
+# Question 4 V2
 
 
-function q4_dynamic(i,j,k,ri0,rj0,rk0,T)
-    Vtplus1 = fill(0.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+function q4_dynamic(i, j, k, ri0, rj0, rk0, T)
+    Vtplus1 = fill(0., (ri0 + 1, rj0 + 1, rk0 + 1, ri0 + 1, rj0 + 1, rk0 + 1))
     
-    #(di,dj,dk,ri,rj,rk)
+    # (di,dj,dk,ri,rj,rk)
     # (avancée à ce tour sur i,j et k, cases restantes sur i,j et k)
     # index 1 correspond à ri = 0
 
-    #Vtplus1[:,:,:,:,:,:] .= 0 # Initialisation "à l'infini"
-    Vt = fill(10000.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+    # Vtplus1[:,:,:,:,:,:] .= 0 # Initialisation "à l'infini"
+    Vt = fill(10000., (ri0 + 1, rj0 + 1, rk0 + 1, ri0 + 1, rj0 + 1, rk0 + 1))
+    S = fill(false, (ri0 + 1, rj0 + 1, rk0 + 1, ri0 + 1, rj0 + 1, rk0 + 1))
 
-    intermed = fill(10000.,(ri0+1,rj0+1,rk0+1,ri0+1,rj0+1,rk0+1))
+    intermed = fill(10000., (ri0 + 1, rj0 + 1, rk0 + 1, ri0 + 1, rj0 + 1, rk0 + 1))
 
-    for t in T-1:-1:1
-        print(t," ")
-        compute_Vt(Vt,Vtplus1,t,i,j,k,ri0,rj0,rk0)
+    for t in T - 1:-1:1
+        print(t, " ")
+        compute_Vt(Vt, Vtplus1, t, i, j, k, ri0, rj0, rk0, S, t==1)
         intermed = Vtplus1
         Vtplus1 = Vt # On ne stocke pas tout pour pas trop saturer la ram et on utilise intermed pour eviter les copies.
         Vt = intermed
     end
 
-    res = Vt[1,1,1,ri0+1,rj0+1,rk0+1]
-
-    Vt=nothing
-    Vtplus1=nothing
-    return res
+    res = Vt[1, 1, 1, ri0 + 1, rj0 + 1, rk0 + 1]
+    println(res)
+    Vt = nothing
+    Vtplus1 = nothing
+    return S[:, :, :, ri0+1, rj0+1, rk0+1]
 end
 
-function compute_Vt(Vt,Vtp1,t,i,j,k,ri0,rj0,rk0)
+function compute_Vt(Vt, Vtp1, t, i, j, k, ri0, rj0, rk0, S, strat)
     for ri in 0:ri0
         for rj in 0:rj0
             for rk in 0:rk0
                 for di in 0:ri
                     for dj in 0:rj
                         for dk in 0:rk
-                            compute_min_actions(Vt,Vtp1,t,i,j,k,di,dj,dk,ri,rj,rk)
+                            compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, strat)
                         end
                     end
                 end
@@ -351,11 +333,11 @@ function compute_Vt(Vt,Vtp1,t,i,j,k,ri0,rj0,rk0)
 end
 
 function get_possibilities_and_legality(a, b, c, d, i, j, k)
-    combis = [[a+b,c+d],[a+c,b+d],[a+d,b+c]]
+    combis = [[a + b, c + d],[a + c, b + d],[a + d, b + c]]
     for x in 1:3
         for y in 1:2
             val = combis[x][y]
-            if val==i || val==j || val==k
+            if val == i || val == j || val == k
                 return combis, true
             end
         end
@@ -363,89 +345,268 @@ function get_possibilities_and_legality(a, b, c, d, i, j, k)
     return combis, false
 end
 
-function compute_min_actions(Vt,Vtp1,t,i,j,k,di,dj,dk,ri,rj,rk)
+function compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, strat)
 
-    if ri==0 && rj==0 && rk==0
-        Vt[di+1,dj+1,dk+1,ri+1,rj+1,rk+1] = 0
+    if ri == 0 && rj == 0 && rk == 0
+        Vt[di + 1, dj + 1, dk + 1, ri + 1, rj + 1, rk + 1] = 0
         return
     end
 
-    if_i_stop = 1+Vtp1[1,1,1,ri-di+1,rj-dj+1,rk-dk+1]
+    if_i_stop = 1 + Vtp1[1, 1, 1, ri - di + 1, rj - dj + 1, rk - dk + 1]
 
     nb_fail = 0
     if_i_throw_success_sum = 0
     
     nb_throws_tot = 6^4
     
-    for throw in 0:nb_throws_tot-1
-        (a,b,c,d) = digits(throw,base=6,pad=4).+1
+    for throw in 0:nb_throws_tot - 1
+        (a, b, c, d) = digits(throw, base=6, pad=4) .+ 1
         combis, legal = get_possibilities_and_legality(a, b, c, d, i, j, k)
         if legal
             mini_val_combi = 10000
-            for (s1,s2) in combis
-                di_new,dj_new,dk_new = di,dj,dk
+            for (s1, s2) in combis
+                di_new, dj_new, dk_new = di, dj, dk
                 has_changed = false
                 
-                if s1==i && ri>di_new
-                    di_new+=1
+                if s1 == i && ri > di_new
+                    di_new += 1
                     has_changed = true
-                elseif s1==j && rj>dj_new
-                    dj_new+=1
+                elseif s1 == j && rj > dj_new
+                    dj_new += 1
                     has_changed = true
-                elseif s1==k && rk>dk_new
-                    dk_new+=1
+                elseif s1 == k && rk > dk_new
+                    dk_new += 1
                     has_changed = true
                 end
                 
-                if s2==i && ri>di_new
-                    di_new+=1
+                if s2 == i && ri > di_new
+                    di_new += 1
                     has_changed = true
-                elseif s2==j && rj>dj_new
-                    dj_new+=1
+                elseif s2 == j && rj > dj_new
+                    dj_new += 1
                     has_changed = true
-                elseif s2==k && rk>dk_new
-                    dk_new+=1
+                elseif s2 == k && rk > dk_new
+                    dk_new += 1
                     has_changed = true
                 end
                 
                 if has_changed
-                    val_combi = Vtp1[di_new+1,dj_new+1,dk_new+1,ri+1,rj+1,rk+1]
-                    if val_combi<mini_val_combi
-                        mini_val_combi=val_combi
+                    val_combi = Vtp1[di_new + 1,dj_new + 1,dk_new + 1,ri + 1,rj + 1,rk + 1]
+                    if val_combi < mini_val_combi
+                        mini_val_combi = val_combi
                     end
                 end
             end
-            if mini_val_combi<10000
-                if_i_throw_success_sum+=mini_val_combi
+            if mini_val_combi < 10000
+                if_i_throw_success_sum += mini_val_combi
             else
-                nb_fail+=1
+                nb_fail += 1
             end
         else
-            nb_fail+=1
+            nb_fail += 1
         end
     end
         
-    if_i_throw_fail_sum = nb_fail*(1+Vtp1[1,1,1,ri+1,rj+1,rk+1])
-    if_i_throw = (if_i_throw_fail_sum+if_i_throw_success_sum)/(nb_throws_tot)
+    if_i_throw_fail_sum = nb_fail * (1 + Vtp1[1, 1, 1,ri + 1,rj + 1,rk + 1])
+    if_i_throw = (if_i_throw_fail_sum + if_i_throw_success_sum) / (nb_throws_tot)
 
-    #println(if_i_stop," ",if_i_throw)
-    mini = min(if_i_stop,if_i_throw)
+    # println(if_i_stop," ",if_i_throw)
+    mini = min(if_i_stop, if_i_throw)
 
-    Vt[di+1,dj+1,dk+1,ri+1,rj+1,rk+1] = mini
+    Vt[di + 1,dj + 1,dk + 1,ri + 1,rj + 1,rk + 1] = mini
+    if strat
+        # if (ri == 3 && rj == 3 && rk == 3)
+        #     # println("i ", di + 1)
+        #     # println("j ", dj + 1)
+        #     # println("k ", dk + 1)
+        #     # println("eq ", (mini == if_i_stop))
+        #     # println("mini ", mini)
+        #     # println("if_i_stop ", if_i_stop)
+        # end
+        S[di + 1,dj + 1,dk + 1,ri + 1,rj + 1,rk + 1] = (mini == if_i_stop)
+    end
 end
 
-@time println(q4_dynamic(6,7,8,3,3,3,100))
+# @time println(q4_dynamic(6, 7, 8, 3, 3, 3, 100))
+S = q4_dynamic(2, 7, 12, 2, 6, 2, 100)
+# println()
+# for i in 1:4
+#     for j in 1:4
+#         for k in 1:4
+#             print(S[i, j, k])
+#             print(" ")
+#         end
+#         println()
+#     end
+#     println()
+#     println()
+#     println()
+# end
+println(S)
 
+function get_result_turn(i, j, k, ri, rj, rk)
+    if isfile("matrix.txt")
+    else
+        open("matrix.txt", "w") do file
+            S = q4_dynamic(i, j, k, ri, rj, rk, 100)
+            for i in 1:ri+1
+                for j in 1:rj+1
+                    for k in 1:rk+1
+                        write(file, S[i, j, k])
+                    end
+                end
+            end
+        end
+    end
+end
 
-#Question 5
+function two_equal(column1, column2, column3)
+    return (column1 == column2 || column1 == column3 || column2 == column3)
+end
+
+function reorder_two_equal(column1, column2, column3)
+    if (column1 == column2)
+        return column1, column2, column3, 2, 0
+    elseif (column1 == column3)
+        return column1, column3, column2, 1, 1
+    elseif (column2 == column3)
+        return column2, column3, column1, 1, 1
+    end
+end
+
+function get_result_movement(movement, gs, i)
+    if length(movement) == 1
+        column1 = gs.open_columns[1]
+        column2 = gs.open_columns[2]
+        column3 = movement[1]
+        return get_score(column1, column2, column3, 0, 0, 1, gs)
+    elseif length(movement) == 2
+        if i == 0
+            column1 = movement[1]
+            column2 = movement[2]
+            if column1 != column2
+                return get_prev_score(column1, column2, 1, 1, gs)
+            else
+                return get_prev_score(column1, 2, gs)
+            end
+        elseif i == 1
+            column1 = movement[1]
+            column2 = movement[2]
+            column3 = gs.open_columns[1]
+            if column1 == column2 && column2 == column3
+                get_prev_score(column1, 2, gs)
+            elseif column1 != column2 && column2 != column3 && column1 != column3
+                return get_score(column1, column2, column3, 1, 1, 0, gs)
+            else if two_equal(column1, column2, column3)
+                column1, column2, column3, move1, move2 = reorder_two_equal(column1, column2, column3)
+                return get_prev_score(column1, column3, move1, move2, gs)
+        elseif i == 2
+            column1 = movement[1]
+            column2 = movement[2]
+            column3 = gs.open_columns[1]
+            column4 = gs.open_columns[2]
+            if column1 == column2
+                if column1 == column3
+                    return get_prev_score(column1, column4, 2, 0, gs)
+                elseif column1 == column4
+                    return get_prev_score(column1, column3, 2, 0, gs)
+                else
+                    return get_score(column1, column4, column3, 2, 0, 0, gs)    
+                end
+            else
+                if (column1 == column3 && column2 == column4) || (column1 == column4 && column2 == column3)
+                    return get_prev_score(column1, column2, 1, 1, gs)
+                elseif two_equal(column1, column3, column4) || two_equal(column2, column3, column4)
+                    if two_equal(column1, column3, column4)
+                        column1, column3, column4, move1, move2 = reorder_two_equal(column1, column3, column4)
+                        return get_score(column1, column2, column4, 1, 1, 0, gs)
+                    else
+                        column2, column3, column4, move1, move2 = reorder_two_equal(column1, column3, column4)
+                        return get_score(column1, column2, column4, 1, 1, 0, gs)
+                end
+            end
+        end
+    end
+end
+
+function get_score(column1, column2, column3, move1, move2, move3, gs)
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 1000)
+    return V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3]                    
+end
+
+function get_prev_score(column1, column2, move1, move2, gs)
+    S = 0
+    for i in 2:12
+        if i != column1 && i != column2
+            column3 = i
+            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 1000)
+            S += V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3]
+        end
+    end
+    return S
+end
+
+function get_prev_score(column1, move, gs)
+    S = 0
+    for i in 2:12
+        for j in 2:12
+            if i != column1 && i != j && j != column1
+                column2 = j
+                column3 = i
+                V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 1000)
+                S += V[column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3]]
+            end
+        end
+    end
+    return S
+end
+
+function find_best(adm_movement, gs, i)
+    best = 1e9
+    move = 0
+    for m in 1:length(adm_movement)
+        if best > get_result_movement(adm_movement[m], gs, i)
+            best = get_resultat
+            move = m
+        end
+    end
+    return m
+end
+
+function which_column(adm_movement, gs)
+    opened_column = gs.open_columns
+    for i in 0:2
+        if length(opened_column) == i
+            return find_best(adm_movement, gs, i)
+        end
+    end
+end
+
+function which_dice(adm_movement, gs)
+    column1 = gs.open_columns[1]
+    column2 = gs.open_columns[2]
+    column3 = gs.open_columns[3]
+    S = get_result_turn(column1, column2, column3, column_length[column1] - gs.players_position[1, column1], column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3])
+    return 
+end
+
+# Question 5
 function policy_q5(gs::game_state, adm_movement)
-    return 1
+    if length(gs.open_columns) < 3
+        return which_column(adm_movement, gs)
+    else
+        return which_dice(adm_movement, gs)
+    end
 end
 function policy_q5(gs::game_state)
-    return (sum(gs.tentitative_movement) > 2)
+    column1 = gs.open_columns[1]
+    column2 = gs.open_columns[2]
+    column3 = gs.open_columns[3]
+    S = q4_dynamic(column1, column2, column3, column_length[column1] - gs.players_position[1, column1], column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
+    return S[gs.tentative[column1], gs.tentative[column2], gs.tentative[column3]]
 end
 
-#Question 6
+# Question 6
 function policy_q6(gs::game_state, adm_movement)
     return 1
 end
@@ -453,7 +614,7 @@ function policy_q6(gs::game_state)
     return (sum(gs.tentitative_movement) > 2)
 end
 
-#Question 7
+# Question 7
 function policy_q7(gs::game_state, adm_movement)
     return 1
 end
@@ -461,7 +622,7 @@ function policy_q7(gs::game_state)
     return (sum(gs.tentitative_movement) > 2)
 end
 
-#Question 8
+# Question 8
 function policy_q8(gs::game_state, adm_movement)
     return 1
 end
@@ -469,4 +630,4 @@ function policy_q8(gs::game_state)
     return (sum(gs.tentitative_movement) > 2)
 end
 
-end #end of module
+end # end of module
