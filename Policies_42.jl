@@ -664,14 +664,15 @@ function policy_q5(gs::game_state)
     if length(gs.open_columns) == 2
         column2 = gs.open_columns[2]
         S = get_result_turn(column1, column2, 1, max(3, column_length[column1] - gs.players_position[1, column1]), max(3, column_length[column2] - gs.players_position[1, column2]), 0)
+        return Bool(S[gs.tentitative_movement[column1] - gs.players_position[1, column1] + 1, 1])
     elseif length(gs.open_columns) == 3
         column2 = gs.open_columns[2]
         column3 = gs.open_columns[3]
         S = get_result_turn(column1, column2, column3, max(3, column_length[column1] - gs.players_position[1, column1]), max(3, column_length[column2] - gs.players_position[1, column2]), max(3, column_length[column3] - gs.players_position[1, column3]))
+        return Bool(S[gs.tentitative_movement[column1] - gs.players_position[1, column1] + 1, gs.tentitative_movement[column2] - gs.players_position[1, column2] + 1, gs.tentitative_movement[column3] - gs.players_position[1, column3] + 1])
     else
         return false
     end
-    return Bool(S[gs.tentitative_movement[column1] - gs.players_position[1, column1] + 1, gs.tentitative_movement[column2] - gs.players_position[1, column2] + 1, gs.tentitative_movement[column3] - gs.players_position[1, column3] + 1])
 end
 
 # Question 6
