@@ -412,7 +412,7 @@ function test_policy(policies,Nmc=1000)
     winner = zeros(nb_players)
     for i in 1:Nmc
         gs = game_state(nb_players)
-        simulate_game!(gs,policies)
+        CantStop.simulate_game!(gs, policies)
         push!(nb_turns,gs.n_turn)
         i = gs.winner
         i > 0 && (winner[i]+=1)

@@ -279,9 +279,9 @@ function find_best_game(i, j, k, ki, kj, kk, nb)
     return V, S
 end
 
-println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
-V, S = find_best_game(2, 7, 12, 2, 6, 2, 1000)
-println(V[2, 6, 2])
+# println(find_direct_game(2, 3, 3, 4, 3, 3, 1000)[:, 1, 1])
+# V, S = find_best_game(2, 7, 12, 2, 6, 2, 1000)
+# println(V[2, 6, 2])
 
 
 
@@ -310,7 +310,6 @@ function q4_dynamic(i, j, k, ri0, rj0, rk0, T)
     end
 
     res = Vt[1, 1, 1, ri0 + 1, rj0 + 1, rk0 + 1]
-    println(res)
     Vt = nothing
     Vtplus1 = nothing
     return S[:, :, :, ri0+1, rj0+1, rk0+1]
@@ -428,7 +427,7 @@ function compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, st
 end
 
 # @time println(q4_dynamic(6, 7, 8, 3, 3, 3, 100))
-S = q4_dynamic(2, 7, 12, 2, 6, 2, 100)
+# S = q4_dynamic(2, 7, 12, 2, 6, 2, 100)
 # println()
 # for i in 1:4
 #     for j in 1:4
@@ -442,23 +441,65 @@ S = q4_dynamic(2, 7, 12, 2, 6, 2, 100)
 #     println()
 #     println()
 # end
-println(S)
+# println(S)
 
-function get_result_turn(i, j, k, ri, rj, rk)
-    if isfile("matrix.txt")
-    else
-        open("matrix.txt", "w") do file
-            S = q4_dynamic(i, j, k, ri, rj, rk, 100)
-            for i in 1:ri+1
-                for j in 1:rj+1
-                    for k in 1:rk+1
-                        write(file, S[i, j, k])
-                    end
-                end
+function parser(lines)
+    first_line = split(lines[1])
+    ri, rj, rk = parse(Int, first_line[4]), parse(Int, first_line[5]), parse(Int, first_line[6])
+    S = zeros(ri+1, rj+1, rk+1)
+    for i ∈ 1:ri+1
+        for j ∈ 1:rj+1
+            line = split(lines[j+(i-1)*(4+rj)+1], ";")
+            for k ∈ 1:rk+1
+                S[i, j, k] = parse(Int, line[k])
             end
         end
     end
+    return S
 end
+
+function create_file(file, S, i, j, k, ri, rj, rk)
+    write(file, "$(i) $(j) $(k) $(ri) $(rj) $(rk)\n")
+    for ni in 1:ri+1
+        for nj in 1:rj+1
+            for nk in 1:rk+1
+                write(file, "$(1*S[ni, nj, nk]);")
+            end
+            write(file, "\n")
+        end
+        write(file, "\n")
+        write(file, "\n")
+        write(file, "\n")
+    end
+end
+
+function get_result_turn(i, j, k, ri, rj, rk)
+    if isfile("matrix.txt")
+        open("matrix.txt", "r") do file
+            lines = readlines(file)
+            first_line = split(lines[1])
+            n = [parse(Int, first_line[1]), parse(Int, first_line[2]), parse(Int, first_line[3])]
+            if i in n && j in n && k in n
+                S = parser(lines)
+                return S
+            else
+                open("matrix.txt", "w") do file
+                    S = q4_dynamic(i, j, k, ri, rj, rk, 100)
+                    create_file(file, S, i, j, k, ri, rj, rk)
+                end
+                return S
+            end
+        end
+    else
+        open("matrix.txt", "w") do file
+            S = q4_dynamic(i, j, k, ri, rj, rk, 100)
+            create_file(file, S, i, j, k, ri, rj, rk)
+        end
+        return S
+    end
+end
+
+# println(get_result_turn(3, 5, 4, 3, 3, 3))
 
 function two_equal(column1, column2, column3)
     return (column1 == column2 || column1 == column3 || column2 == column3)
@@ -497,9 +538,10 @@ function get_result_movement(movement, gs, i)
                 get_prev_score(column1, 2, gs)
             elseif column1 != column2 && column2 != column3 && column1 != column3
                 return get_score(column1, column2, column3, 1, 1, 0, gs)
-            else if two_equal(column1, column2, column3)
+            elseif two_equal(column1, column2, column3)
                 column1, column2, column3, move1, move2 = reorder_two_equal(column1, column2, column3)
                 return get_prev_score(column1, column3, move1, move2, gs)
+            end
         elseif i == 2
             column1 = movement[1]
             column2 = movement[2]
@@ -523,6 +565,7 @@ function get_result_movement(movement, gs, i)
                     else
                         column2, column3, column4, move1, move2 = reorder_two_equal(column1, column3, column4)
                         return get_score(column1, column2, column4, 1, 1, 0, gs)
+                    end
                 end
             end
         end
@@ -535,42 +578,43 @@ function get_score(column1, column2, column3, move1, move2, move3, gs)
 end
 
 function get_prev_score(column1, column2, move1, move2, gs)
-    S = 0
+    T = 0.
     for i in 2:12
         if i != column1 && i != column2
             column3 = i
-            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 1000)
-            S += V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3]
+            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3], 1000)
+            T += V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3]]
         end
     end
-    return S
+    return T
 end
 
 function get_prev_score(column1, move, gs)
-    S = 0
+    T = 0.
     for i in 2:12
         for j in 2:12
             if i != column1 && i != j && j != column1
                 column2 = j
                 column3 = i
                 V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 1000)
-                S += V[column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3]]
+                T += V[column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3]]
             end
         end
     end
-    return S
+    return T
 end
 
 function find_best(adm_movement, gs, i)
     best = 1e9
     move = 0
     for m in 1:length(adm_movement)
-        if best > get_result_movement(adm_movement[m], gs, i)
-            best = get_resultat
+        turn = get_result_movement(adm_movement[m], gs, i)
+        if best > turn
+            best = turn
             move = m
         end
     end
-    return m
+    return move
 end
 
 function which_column(adm_movement, gs)
@@ -582,12 +626,29 @@ function which_column(adm_movement, gs)
     end
 end
 
+function get_i_j_k(move, column1, column2, column3)
+    if length(move) == 2
+        return move[1]==column1 + move[2]==column1, move[1]==column2 + move[2]==column2, move[1]==column3 + move[2]==column3
+    else
+        return move[1]==column1, move[1]==column2, move[1]==column3
+    end
+end
+
 function which_dice(adm_movement, gs)
     column1 = gs.open_columns[1]
     column2 = gs.open_columns[2]
     column3 = gs.open_columns[3]
-    S = get_result_turn(column1, column2, column3, column_length[column1] - gs.players_position[1, column1], column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3])
-    return 
+    best_move = 1
+    nb_turns = 1e10
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 1000)
+    for (m, move) in enumerate(adm_movement)
+        i, j, k = get_i_j_k(move, column1, column2, column3)
+        if nb_turns > V[gs.tentative[column1]+i, gs.tentative[column2]+j, gs.tentative[column3]+k]
+            nb_turns = V[gs.tentative[column1]+i, gs.tentative[column2]+j, gs.tentative[column3]+k]
+            best_move = m
+        end
+    end
+    return best_move
 end
 
 # Question 5
@@ -600,10 +661,17 @@ function policy_q5(gs::game_state, adm_movement)
 end
 function policy_q5(gs::game_state)
     column1 = gs.open_columns[1]
-    column2 = gs.open_columns[2]
-    column3 = gs.open_columns[3]
-    S = q4_dynamic(column1, column2, column3, column_length[column1] - gs.players_position[1, column1], column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
-    return S[gs.tentative[column1], gs.tentative[column2], gs.tentative[column3]]
+    if length(gs.open_columns) == 2
+        column2 = gs.open_columns[2]
+        S = get_result_turn(column1, column2, 1, max(3, column_length[column1] - gs.players_position[1, column1]), max(3, column_length[column2] - gs.players_position[1, column2]), 0)
+    elseif length(gs.open_columns) == 3
+        column2 = gs.open_columns[2]
+        column3 = gs.open_columns[3]
+        S = get_result_turn(column1, column2, column3, max(3, column_length[column1] - gs.players_position[1, column1]), max(3, column_length[column2] - gs.players_position[1, column2]), max(3, column_length[column3] - gs.players_position[1, column3]))
+    else
+        return false
+    end
+    return Bool(S[gs.tentative[column1] - gs.players_position[1, column1] + 1, gs.tentative[column2] - gs.players_position[1, column2] + 1, gs.tentative[column3] - gs.players_position[1, column3] + 1])
 end
 
 # Question 6
