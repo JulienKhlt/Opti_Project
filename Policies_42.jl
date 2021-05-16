@@ -643,8 +643,8 @@ function which_dice(adm_movement, gs)
     V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
     for (m, move) in enumerate(adm_movement)
         i, j, k = get_i_j_k(move, column1, column2, column3)
-        if nb_turns > V[gs.tentative[column1]+i, gs.tentative[column2]+j, gs.tentative[column3]+k]
-            nb_turns = V[gs.tentative[column1]+i, gs.tentative[column2]+j, gs.tentative[column3]+k]
+        if nb_turns > V[gs.tentative_movement[column1]+i, gs.tentative_movement[column2]+j, gs.tentative_movement[column3]+k]
+            nb_turns = V[gs.tentative_movement[column1]+i, gs.tentative_movement[column2]+j, gs.tentative_movement[column3]+k]
             best_move = m
         end
     end
@@ -671,7 +671,7 @@ function policy_q5(gs::game_state)
     else
         return false
     end
-    return Bool(S[gs.tentative[column1] - gs.players_position[1, column1] + 1, gs.tentative[column2] - gs.players_position[1, column2] + 1, gs.tentative[column3] - gs.players_position[1, column3] + 1])
+    return Bool(S[gs.tentative_movement[column1] - gs.players_position[1, column1] + 1, gs.tentative_movement[column2] - gs.players_position[1, column2] + 1, gs.tentative_movement[column3] - gs.players_position[1, column3] + 1])
 end
 
 # Question 6
