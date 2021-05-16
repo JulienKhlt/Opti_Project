@@ -486,16 +486,16 @@ function get_result_turn(i, j, k, ri, rj, rk)
                 open("matrix.txt", "w") do file
                     S = q4_dynamic(i, j, k, ri, rj, rk, 100)
                     create_file(file, S, i, j, k, ri, rj, rk)
+                    return S
                 end
-                return S
             end
         end
     else
         open("matrix.txt", "w") do file
             S = q4_dynamic(i, j, k, ri, rj, rk, 100)
             create_file(file, S, i, j, k, ri, rj, rk)
+            return S
         end
-        return S
     end
 end
 
@@ -573,7 +573,7 @@ function get_result_movement(movement, gs, i)
 end
 
 function get_score(column1, column2, column3, move1, move2, move3, gs)
-    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 1000)
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 100)
     return V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3]                    
 end
 
@@ -582,7 +582,7 @@ function get_prev_score(column1, column2, move1, move2, gs)
     for i in 2:12
         if i != column1 && i != column2
             column3 = i
-            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3], 1000)
+            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3], 100)
             T += V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3]]
         end
     end
@@ -596,7 +596,7 @@ function get_prev_score(column1, move, gs)
             if i != column1 && i != j && j != column1
                 column2 = j
                 column3 = i
-                V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 1000)
+                V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
                 T += V[column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3]]
             end
         end
@@ -640,7 +640,7 @@ function which_dice(adm_movement, gs)
     column3 = gs.open_columns[3]
     best_move = 1
     nb_turns = 1e10
-    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 1000)
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
     for (m, move) in enumerate(adm_movement)
         i, j, k = get_i_j_k(move, column1, column2, column3)
         if nb_turns > V[gs.tentative[column1]+i, gs.tentative[column2]+j, gs.tentative[column3]+k]
