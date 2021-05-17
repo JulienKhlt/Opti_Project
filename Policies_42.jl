@@ -563,7 +563,7 @@ function get_result_movement(movement, gs, i)
                         column1, column3, column4, move1, move2 = reorder_two_equal(column1, column3, column4)
                         return get_score(column1, column2, column4, 1, 1, 0, gs)
                     else
-                        column2, column3, column4, move1, move2 = reorder_two_equal(column1, column3, column4)
+                        column2, column3, column4, move1, move2 = reorder_two_equal(column2, column3, column4)
                         return get_score(column1, column2, column4, 1, 1, 0, gs)
                     end
                 end
@@ -640,7 +640,7 @@ function which_dice(adm_movement, gs)
     column3 = gs.open_columns[3]
     best_move = 1
     nb_turns = 1e10
-    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1], column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
     for (m, move) in enumerate(adm_movement)
         i, j, k = get_i_j_k(move, column1, column2, column3)
         if nb_turns > V[gs.tentitative_movement[column1]+i, gs.tentitative_movement[column2]+j, gs.tentitative_movement[column3]+k]
@@ -663,13 +663,17 @@ function policy_q5(gs::game_state)
     column1 = gs.open_columns[1]
     if length(gs.open_columns) == 2
         column2 = gs.open_columns[2]
-        S = get_result_turn(column1, column2, 1, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), 0)
-        return Bool(S[gs.tentitative_movement[column1] - gs.players_position[1, column1] + 1, 1])
+        # S = get_result_turn(column1, column2, 2, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), 0)
+        S = q4_dynamic(column1, column2, 2, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1, 100)
+        return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1])
     elseif length(gs.open_columns) == 3
         column2 = gs.open_columns[2]
         column3 = gs.open_columns[3]
-        S = get_result_turn(column1, column2, column3, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), min(3, column_length[column3] - gs.players_position[1, column3]))
-        return Bool(S[gs.tentitative_movement[column1] - gs.players_position[1, column1] + 1, gs.tentitative_movement[column2] - gs.players_position[1, column2] + 1, gs.tentitative_movement[column3] - gs.players_position[1, column3] + 1])
+        # S = get_result_turn(column1, column2, column3, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), min(3, column_length[column3] - gs.players_position[1, column3]))
+        println(gs.tentitative_movement)
+        println(gs.players_position)
+        S = q4_dynamic(column1, column2, column3, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1, 100)
+        return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1])
     else
         return false
     end

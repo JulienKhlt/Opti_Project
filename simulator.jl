@@ -23,8 +23,8 @@ CantStop.simulate_game!(gs,[policy1], 3) # the third argument is a verbosity lev
 #Simulating a game with player1 and player 2 policy
 # gs = game_state(2)
 # simulate_game!(gs,[policy1,policy2], 2)
-
 # plotting a game
+
 # include("plot_position.jl")
 # plot_position(gs)
 # plot!()
