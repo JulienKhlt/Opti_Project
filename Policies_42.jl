@@ -599,7 +599,7 @@ function get_prev_score(column1, column2, move1, move2, gs)
             T += V[column_length[column1] - gs.players_position[1, column1] - move1+1, column_length[column2] - gs.players_position[1, column2] - move2+1, column_length[column3] - gs.players_position[1, column3]+1]
         end
     end
-    return T
+    return T/10
 end
 
 function get_prev_score(column1, move, gs)
@@ -614,7 +614,7 @@ function get_prev_score(column1, move, gs)
             end
         end
     end
-    return T
+    return T/110
 end
 
 function find_best(adm_movement, gs, i)
