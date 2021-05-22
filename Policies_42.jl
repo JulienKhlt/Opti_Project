@@ -517,10 +517,23 @@ end
 
 function get_result_movement(movement, gs, i)
     if length(movement) == 1
-        column1 = gs.open_columns[1]
-        column2 = gs.open_columns[2]
-        column3 = movement[1]
-        return get_score(column1, column2, column3, 0, 0, 1, gs)
+        if i == 2
+            column1 = gs.open_columns[1]
+            column2 = gs.open_columns[2]
+            column3 = movement[1]
+            return get_score(column1, column2, column3, 0, 0, 1, gs)
+        elseif i == 1
+            column1 = gs.open_columns[1]
+            column2 = movement[1]
+            if column1 == column2
+                return get_prev_score(column1, 1, gs)
+            else
+                return get_prev_score(column1, column2, 0, 1, gs)
+            end
+        else
+            column1 = movement[1]
+            return get_prev_score(column1, 1, gs)
+        end
     elseif length(movement) == 2
         if i == 0
             column1 = movement[1]
@@ -573,8 +586,8 @@ function get_result_movement(movement, gs, i)
 end
 
 function get_score(column1, column2, column3, move1, move2, move3, gs)
-    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3, 100)
-    return V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3] - move3]                    
+    V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1+1, column_length[column2] - gs.players_position[1, column2] - move2+1, column_length[column3] - gs.players_position[1, column3] - move3+1, 100)
+    return V[column_length[column1] - gs.players_position[1, column1] - move1+1, column_length[column2] - gs.players_position[1, column2] - move2+1, column_length[column3] - gs.players_position[1, column3] - move3+1]                    
 end
 
 function get_prev_score(column1, column2, move1, move2, gs)
@@ -582,8 +595,8 @@ function get_prev_score(column1, column2, move1, move2, gs)
     for i in 2:12
         if i != column1 && i != column2
             column3 = i
-            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3], 100)
-            T += V[column_length[column1] - gs.players_position[1, column1] - move1, column_length[column2] - gs.players_position[1, column2] - move2, column_length[column3] - gs.players_position[1, column3]]
+            V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move1+1, column_length[column2] - gs.players_position[1, column2] - move2+1, column_length[column3] - gs.players_position[1, column3]+1, 100)
+            T += V[column_length[column1] - gs.players_position[1, column1] - move1+1, column_length[column2] - gs.players_position[1, column2] - move2+1, column_length[column3] - gs.players_position[1, column3]+1]
         end
     end
     return T
@@ -596,8 +609,8 @@ function get_prev_score(column1, move, gs)
             if i != column1 && i != j && j != column1
                 column2 = j
                 column3 = i
-                V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3], 100)
-                T += V[column_length[column1] - gs.players_position[1, column1] - move, column_length[column2] - gs.players_position[1, column2], column_length[column3] - gs.players_position[1, column3]]
+                V, S = find_best_game(column1, column2, column3, column_length[column1] - gs.players_position[1, column1] - move+1, column_length[column2] - gs.players_position[1, column2]+1, column_length[column3] - gs.players_position[1, column3]+1, 100)
+                T += V[column_length[column1] - gs.players_position[1, column1] - move+1, column_length[column2] - gs.players_position[1, column2]+1, column_length[column3] - gs.players_position[1, column3]+1]
             end
         end
     end
