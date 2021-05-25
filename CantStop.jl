@@ -414,6 +414,7 @@ function test_policy(policies,Nmc=1000)
         gs = game_state(nb_players)
         CantStop.simulate_game!(gs, policies)
         push!(nb_turns,gs.n_turn)
+        println(i)
         i = gs.winner
         i > 0 && (winner[i]+=1)
     end

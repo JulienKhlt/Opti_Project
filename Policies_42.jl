@@ -302,7 +302,7 @@ function q4_dynamic(i, j, k, ri0, rj0, rk0, T)
     intermed = fill(10000., (ri0 + 1, rj0 + 1, rk0 + 1, ri0 + 1, rj0 + 1, rk0 + 1))
 
     for t in T - 1:-1:1
-        print(t, " ")
+        # print(t, " ")
         compute_Vt(Vt, Vtplus1, t, i, j, k, ri0, rj0, rk0, S, t==1)
         intermed = Vtplus1
         Vtplus1 = Vt # On ne stocke pas tout pour pas trop saturer la ram et on utilise intermed pour eviter les copies.
@@ -310,6 +310,7 @@ function q4_dynamic(i, j, k, ri0, rj0, rk0, T)
     end
 
     res = Vt[1, 1, 1, ri0 + 1, rj0 + 1, rk0 + 1]
+    # println(res)
     Vt = nothing
     Vtplus1 = nothing
     return S[:, :, :, ri0+1, rj0+1, rk0+1]
@@ -322,7 +323,7 @@ function compute_Vt(Vt, Vtp1, t, i, j, k, ri0, rj0, rk0, S, strat)
                 for di in 0:ri
                     for dj in 0:rj
                         for dk in 0:rk
-                            compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, strat)
+                            @inbounds compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, strat)
                         end
                     end
                 end
@@ -358,51 +359,70 @@ function compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, st
     
     nb_throws_tot = 6^4
     
-    for throw in 0:nb_throws_tot - 1
-        (a, b, c, d) = digits(throw, base=6, pad=4) .+ 1
-        combis, legal = get_possibilities_and_legality(a, b, c, d, i, j, k)
-        if legal
-            mini_val_combi = 10000
-            for (s1, s2) in combis
-                di_new, dj_new, dk_new = di, dj, dk
-                has_changed = false
-                
-                if s1 == i && ri > di_new
-                    di_new += 1
-                    has_changed = true
-                elseif s1 == j && rj > dj_new
-                    dj_new += 1
-                    has_changed = true
-                elseif s1 == k && rk > dk_new
-                    dk_new += 1
-                    has_changed = true
-                end
-                
-                if s2 == i && ri > di_new
-                    di_new += 1
-                    has_changed = true
-                elseif s2 == j && rj > dj_new
-                    dj_new += 1
-                    has_changed = true
-                elseif s2 == k && rk > dk_new
-                    dk_new += 1
-                    has_changed = true
-                end
-                
-                if has_changed
-                    val_combi = Vtp1[di_new + 1,dj_new + 1,dk_new + 1,ri + 1,rj + 1,rk + 1]
-                    if val_combi < mini_val_combi
-                        mini_val_combi = val_combi
+    # for throw in 0:nb_throws_tot - 1
+        # (a, b, c, d) = digits(throw, base=6, pad=4) .+ 1
+    for a in 1:6
+        for b in a:6
+            for c in b:6
+                for d in c:6
+                    combis, legal = get_possibilities_and_legality(a, b, c, d, i, j, k)
+                    fact = 0
+                    if a == b && b == c && c == d
+                        fact = 1
+                    elseif a != b && b != c && c != d
+                        fact = 24
+                    elseif (a == b && c == d && a != c) || (a == c && b == d && a != b) || (a == d && c == b && a != c)
+                        fact = 6
+                    elseif (a == b && b == c && c != d) || (a == b && b == d && a != c) || (d == b && b == c && c != a) || (a == d && d == c && c != b)
+                        fact = 4
+                    elseif (a == b && a != c && a != d && c != d) || (a == c && a != b && a != d && b != d) || (a == d && a != c && a != b && c != b) || (b == c && b != a && b != d && a != d) || (b == d && b != a && b != c && a != c) || (c == d && b != a && b != c && a != c)
+                        fact = 12
+                    end
+                    if legal
+                        mini_val_combi = 10000
+                        for (s1, s2) in combis
+                            di_new, dj_new, dk_new = di, dj, dk
+                            has_changed = false
+                            
+                            if s1 == i && ri > di_new
+                                di_new += 1
+                                has_changed = true
+                            elseif s1 == j && rj > dj_new
+                                dj_new += 1
+                                has_changed = true
+                            elseif s1 == k && rk > dk_new
+                                dk_new += 1
+                                has_changed = true
+                            end
+                            
+                            if s2 == i && ri > di_new
+                                di_new += 1
+                                has_changed = true
+                            elseif s2 == j && rj > dj_new
+                                dj_new += 1
+                                has_changed = true
+                            elseif s2 == k && rk > dk_new
+                                dk_new += 1
+                                has_changed = true
+                            end
+                            
+                            if has_changed
+                                val_combi = Vtp1[di_new + 1,dj_new + 1,dk_new + 1,ri + 1,rj + 1,rk + 1]
+                                if val_combi < mini_val_combi
+                                    mini_val_combi = val_combi
+                                end
+                            end
+                        end
+                        if mini_val_combi < 10000
+                            if_i_throw_success_sum += mini_val_combi * fact
+                        else
+                            nb_fail += 1 * fact
+                        end
+                    else
+                        nb_fail += 1 * fact
                     end
                 end
             end
-            if mini_val_combi < 10000
-                if_i_throw_success_sum += mini_val_combi
-            else
-                nb_fail += 1
-            end
-        else
-            nb_fail += 1
         end
     end
         
@@ -427,11 +447,11 @@ function compute_min_actions(Vt, Vtp1, t, i, j, k, di, dj, dk, ri, rj, rk, S, st
 end
 
 # @time println(q4_dynamic(6, 7, 8, 3, 3, 3, 100))
-# S = q4_dynamic(2, 7, 12, 2, 6, 2, 100)
+# @time S = q4_dynamic(2, 7, 12, 3, 3, 3, 100)
 # println()
-# for i in 1:4
-#     for j in 1:4
-#         for k in 1:4
+# for i in 1:3
+#     for j in 1:3
+#         for k in 1:3
 #             print(S[i, j, k])
 #             print(" ")
 #         end
@@ -441,7 +461,20 @@ end
 #     println()
 #     println()
 # end
-# println(S)
+# @time S = q4_dynamic(6, 7, 9, 3, 3, 3, 100)
+# println()
+# for i in 1:3
+#     for j in 1:3
+#         for k in 1:3
+#             print(S[i, j, k])
+#             print(" ")
+#         end
+#         println()
+#     end
+#     println()
+#     println()
+#     println()
+# end
 
 function parser(lines)
     first_line = split(lines[1])
@@ -665,31 +698,62 @@ function which_dice(adm_movement, gs)
 end
 
 # Question 5
-function policy_q5(gs::game_state, adm_movement)
-    if length(gs.open_columns) < 3
-        return which_column(adm_movement, gs)
-    else
-        return which_dice(adm_movement, gs)
-    end
-end
+# function policy_q5(gs::game_state, adm_movement)
+#     println(adm_movement)
+#     if length(gs.open_columns) < 3
+#         return which_column(adm_movement, gs)
+#     else
+#         return which_dice(adm_movement, gs)
+#     end
+# end
+# function policy_q5(gs::game_state)
+#     column1 = gs.open_columns[1]
+#     if length(gs.open_columns) == 2
+#         column2 = gs.open_columns[2]
+#         # S = get_result_turn(column1, column2, 2, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), 0)
+#         S = q4_dynamic(column1, column2, 2, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1, 100)
+#         return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1])
+#     elseif length(gs.open_columns) == 3
+#         column2 = gs.open_columns[2]
+#         column3 = gs.open_columns[3]
+#         # S = get_result_turn(column1, column2, column3, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), min(3, column_length[column3] - gs.players_position[1, column3]))
+#         # println(gs.tentitative_movement)
+#         # println(gs.players_position)
+#         S = q4_dynamic(column1, column2, column3, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1, 100)
+#         return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1])
+#     else
+#         return false
+#     end
+# end
+
 function policy_q5(gs::game_state)
-    column1 = gs.open_columns[1]
-    if length(gs.open_columns) == 2
-        column2 = gs.open_columns[2]
-        # S = get_result_turn(column1, column2, 2, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), 0)
-        S = q4_dynamic(column1, column2, 2, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1, 100)
-        return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, 1])
-    elseif length(gs.open_columns) == 3
+    if length(gs.open_columns) < 3
+        return false
+    else
+        column1 = gs.open_columns[1]
         column2 = gs.open_columns[2]
         column3 = gs.open_columns[3]
-        # S = get_result_turn(column1, column2, column3, min(3, column_length[column1] - gs.players_position[1, column1]), min(3, column_length[column2] - gs.players_position[1, column2]), min(3, column_length[column3] - gs.players_position[1, column3]))
-        println(gs.tentitative_movement)
-        println(gs.players_position)
-        S = q4_dynamic(column1, column2, column3, gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1, 100)
-        return Bool(S[gs.tentitative_movement[column1] + 1, gs.tentitative_movement[column2] + 1, gs.tentitative_movement[column3] + 1])
-    else
-        return false
+        return sum(gs.tentitative_movement) > best_policy(proba(column1, column2, column3))
     end
+end
+
+function policy_q5(gs::game_state, adm_movement)
+    # println(adm_movement)
+    best = 10
+    best_i = 0
+    for m in 1:length(adm_movement)
+        indicateur = abs(7 - sum(adm_movement[m])/length(adm_movement[m]))
+        if indicateur < best
+            best = indicateur
+            best_i = m
+        elseif indicateur == best
+            if maximum(adm_movement[m]) - minimum(adm_movement[m]) < maximum(adm_movement[best_i]) - minimum(adm_movement[best_i])
+                best_i = m
+            end
+        end
+    end
+    # println(best_i)
+    return best_i
 end
 
 # Question 6
