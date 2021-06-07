@@ -16,7 +16,7 @@ gs = CantStop.game_state(1) #Initialising a one player game
 # CantStop.simulate_game!(gs,[policy1], 3) # the third argument is a verbosity level
 
 #Simulating 1000 games with policy1
-nb_turns, winner = CantStop.test_policy([policy1], 100)
+nb_turns, winner = CantStop.test_policy([policy1], 1000)
 # println(winner)
 println(nb_turns)
 println(sum(nb_turns) / length(nb_turns))

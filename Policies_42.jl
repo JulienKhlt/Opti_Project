@@ -740,7 +740,7 @@ function policy_q5(gs::game_state)
         elseif (gs.tentitative_movement[column3] + gs.players_position[1, column3]) == column_length[column3]
             return true
         else
-            return sum(gs.tentitative_movement) > best_policy(proba(column1, column2, column3))
+            return sum(gs.tentitative_movement) > best_policy(proba(column1, column2, column3))*1.5
         end
     end
 end
