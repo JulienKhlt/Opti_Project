@@ -733,28 +733,59 @@ function policy_q5(gs::game_state)
         column1 = gs.open_columns[1]
         column2 = gs.open_columns[2]
         column3 = gs.open_columns[3]
-        return sum(gs.tentitative_movement) > best_policy(proba(column1, column2, column3))
+        if (gs.tentitative_movement[column1] + gs.players_position[1, column1]) == column_length[column1]
+            return true
+        elseif (gs.tentitative_movement[column2] + gs.players_position[1, column2]) == column_length[column2]
+            return true
+        elseif (gs.tentitative_movement[column3] + gs.players_position[1, column3]) == column_length[column3]
+            return true
+        else
+            return sum(gs.tentitative_movement) > best_policy(proba(column1, column2, column3))
+        end
     end
 end
 
 function policy_q5(gs::game_state, adm_movement)
-    # println(adm_movement)
-    best = 10
-    best_i = 0
+    best = 0
+    indicateur = 0
     for m in 1:length(adm_movement)
-        indicateur = abs(7 - sum(adm_movement[m])/length(adm_movement[m]))
-        if indicateur < best
-            best = indicateur
-            best_i = m
-        elseif indicateur == best
-            if maximum(adm_movement[m]) - minimum(adm_movement[m]) < maximum(adm_movement[best_i]) - minimum(adm_movement[best_i])
-                best_i = m
-            end
+        if length(adm_movement[m]) == 2 && adm_movement[m][1] == adm_movement[m][2]
+            return m
+        end
+        ind = 0
+        for move in adm_movement[m]
+            ind += (gs.tentitative_movement[move] + gs.players_position[1, move]) / column_length[move]
+        end
+        if ind > indicateur
+            best = m
+            indicateur = ind
         end
     end
-    # println(best_i)
-    return best_i
+    if best == 0
+        return 1
+    else
+        return best
+    end
 end
+
+# function policy_q5(gs::game_state, adm_movement)
+#     # println(adm_movement)
+#     best = 10
+#     best_i = 0
+#     for m in 1:length(adm_movement)
+#         indicateur = abs(7 - sum(adm_movement[m])/length(adm_movement[m]))
+#         if indicateur < best
+#             best = indicateur
+#             best_i = m
+#         elseif indicateur == best
+#             if maximum(adm_movement[m]) - minimum(adm_movement[m]) < maximum(adm_movement[best_i]) - minimum(adm_movement[best_i])
+#                 best_i = m
+#             end
+#         end
+#     end
+#     # println(best_i)
+#     return best_i
+# end
 
 # Question 6
 function policy_q6(gs::game_state, adm_movement)
