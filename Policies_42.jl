@@ -51,6 +51,7 @@ function policy_q1(gs::game_state)
 end
 
 function best_policy(p)
+    """function that gives you the best policy in the push your luck game with probability p of wining"""
     k = 1 / log(1 / p)
     part_ent = floor(k)
     if part_ent > p / (1 - p)
@@ -68,6 +69,7 @@ function policy_q2(gs::game_state)
 end
 
 function find_best(G, p)
+     """function that gives you the best policy in the push your luck game to obtain the number G when your probability of winning is p"""
     turn = [1 / p]
     policy = [[1]]
     for k in 2:G
@@ -129,6 +131,7 @@ function policy_q3(gs::game_state)
 end
 
 function proba(i, j, k)
+    """function that computes the exact proba of having either i, j or k"""
     p = 0
     l = []
     for a in 1:6
@@ -150,6 +153,7 @@ function proba(i, j, k)
 end
 
 function proba2(i, j, k)
+    """function that computes the exact proba of having either i, j or k and i, j or k"""
     p = 0
     for a in 1:6
         for b in 1:6
@@ -185,10 +189,12 @@ function policy_q4(gs::game_state)
 end
 
 function throw_multiple()
+    """function that simulates a normal throw"""
     return rand(1:6), rand(1:6), rand(1:6), rand(1:6) 
 end
 
 function get_possibilities(a, b, c, d)
+    """function that given a throw return the possible columns"""
     return [[a + b, c + d], [a + c, b + d], [a + d, b + c]]
 end
 
